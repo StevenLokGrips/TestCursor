@@ -91,6 +91,26 @@ export default function Calculator() {
       return;
     }
 
+    // If expression ends with an operator, don't try to evaluate it
+    // Just show the result of the expression without the trailing operator
+    if (/[\+\-\*\/]$/.test(expr)) {
+      const exprWithoutOperator = expr.slice(0, -1);
+      if (exprWithoutOperator === "") {
+        setResult("0");
+        setHasError(false);
+        return;
+      }
+      const evaluated = safeEvaluate(exprWithoutOperator);
+      if (evaluated === null) {
+        setResult("Error");
+        setHasError(true);
+      } else {
+        setResult(formatNumber(evaluated));
+        setHasError(false);
+      }
+      return;
+    }
+
     const evaluated = safeEvaluate(expr);
     if (evaluated === null) {
       setResult("Error");
@@ -149,6 +169,11 @@ export default function Calculator() {
 
     // Prevent multiple operators in a row
     if (["+", "-", "*", "/"].includes(value)) {
+      // Don't allow operators on empty expression
+      if (currentExpression === "") {
+        return;
+      }
+      
       const lastChar = currentExpression[currentExpression.length - 1];
       if (["+", "-", "*", "/"].includes(lastChar)) {
         // Replace the last operator
