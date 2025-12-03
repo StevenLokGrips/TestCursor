@@ -1,0 +1,173 @@
+.wrapper {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.calculator {
+  background: #ffffff;
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  padding: 2rem;
+  width: 100%;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.display {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 1.5rem;
+  min-height: 120px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: flex-end;
+  font-family: "Courier New", Courier, monospace;
+  word-break: break-all;
+  overflow-wrap: break-word;
+}
+
+.display .expression {
+  font-size: 1rem;
+  color: #6c757d;
+  margin-bottom: 0.5rem;
+  min-height: 1.5rem;
+  text-align: right;
+  width: 100%;
+}
+
+.display .result {
+  font-size: 2.5rem;
+  font-weight: 600;
+  color: #212121;
+  text-align: right;
+  line-height: 1.2;
+  width: 100%;
+}
+
+.display.error .result {
+  color: #dc3545;
+}
+
+.buttonGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.75rem;
+}
+
+.button {
+  background: #f8f9fa;
+  border: none;
+  border-radius: 12px;
+  font-size: 1.5rem;
+  font-weight: 500;
+  color: #212121;
+  cursor: pointer;
+  padding: 1.25rem;
+  transition: all 0.15s ease;
+  font-family: inherit;
+  user-select: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.button:hover {
+  background: #e9ecef;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.button:active {
+  background: #dee2e6;
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.button.operator {
+  background: #e3f2fd;
+  color: #1976d2;
+}
+
+.button.operator:hover {
+  background: #bbdefb;
+}
+
+.button.operator:active {
+  background: #90caf9;
+}
+
+.button.equals {
+  background: #1976d2;
+  color: #ffffff;
+  grid-column: 4;
+  grid-row: 4 / 6;
+}
+
+.button.equals:hover {
+  background: #1565c0;
+}
+
+.button.equals:active {
+  background: #0d47a1;
+}
+
+.button.clear {
+  background: #ffebee;
+  color: #c62828;
+}
+
+.button.clear:hover {
+  background: #ffcdd2;
+}
+
+.button.clear:active {
+  background: #ef9a9a;
+}
+
+.button.backspace {
+  background: #f3e5f5;
+  color: #7b1fa2;
+}
+
+.button.backspace:hover {
+  background: #e1bee7;
+}
+
+.button.backspace:active {
+  background: #ce93d8;
+}
+
+@media (max-width: 480px) {
+  .calculator {
+    padding: 1.5rem;
+    border-radius: 16px;
+  }
+
+  .display {
+    min-height: 100px;
+    padding: 1rem;
+  }
+
+  .display .result {
+    font-size: 2rem;
+  }
+
+  .display .expression {
+    font-size: 0.875rem;
+  }
+
+  .button {
+    padding: 1rem;
+    font-size: 1.25rem;
+    border-radius: 10px;
+  }
+
+  .buttonGrid {
+    gap: 0.5rem;
+  }
+}
+
