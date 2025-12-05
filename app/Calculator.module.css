@@ -4,18 +4,49 @@
   align-items: center;
   justify-content: center;
   padding: 1rem;
+  min-height: 100vh;
 }
 
 .calculator {
   background: #ffffff;
   border-radius: 20px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-  padding: 2rem;
+  padding: 1.5rem;
   width: 100%;
-  max-width: 400px;
+  max-width: 600px;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1rem;
+}
+
+.modeToggle {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.modeButton {
+  flex: 1;
+  padding: 0.5rem;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  background: #f8f9fa;
+  color: #666;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.modeButton:hover {
+  background: #e9ecef;
+  border-color: #1976d2;
+}
+
+.modeButton.active {
+  background: #1976d2;
+  color: #ffffff;
+  border-color: #1976d2;
 }
 
 .display {
@@ -33,7 +64,7 @@
 }
 
 .display .expression {
-  font-size: 1rem;
+  font-size: 0.9rem;
   color: #6c757d;
   margin-bottom: 0.5rem;
   min-height: 1.5rem;
@@ -56,23 +87,48 @@
 
 .buttonGrid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 0.75rem;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.5rem;
+  max-height: 70vh;
+  overflow-y: auto;
+  padding-right: 0.25rem;
+}
+
+.buttonGrid::-webkit-scrollbar {
+  width: 6px;
+}
+
+.buttonGrid::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.buttonGrid::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 3px;
+}
+
+.buttonGrid::-webkit-scrollbar-thumb:hover {
+  background: #555;
 }
 
 .button {
   background: #f8f9fa;
   border: none;
-  border-radius: 12px;
-  font-size: 1.5rem;
+  border-radius: 10px;
+  font-size: 1rem;
   font-weight: 500;
   color: #212121;
   cursor: pointer;
-  padding: 1.25rem;
+  padding: 0.875rem 0.5rem;
   transition: all 0.15s ease;
   font-family: inherit;
   user-select: none;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .button:hover {
@@ -103,8 +159,7 @@
 .button.equals {
   background: #1976d2;
   color: #ffffff;
-  grid-column: 4;
-  grid-row: 4 / 6;
+  grid-row: span 2;
 }
 
 .button.equals:hover {
@@ -141,10 +196,38 @@
   background: #ce93d8;
 }
 
-@media (max-width: 480px) {
+.button.function {
+  background: #fff3e0;
+  color: #e65100;
+  font-size: 0.9rem;
+}
+
+.button.function:hover {
+  background: #ffe0b2;
+}
+
+.button.function:active {
+  background: #ffcc80;
+}
+
+.button.constant {
+  background: #e8f5e9;
+  color: #2e7d32;
+  font-weight: 600;
+}
+
+.button.constant:hover {
+  background: #c8e6c9;
+}
+
+.button.constant:active {
+  background: #a5d6a7;
+}
+
+@media (max-width: 768px) {
   .calculator {
-    padding: 1.5rem;
-    border-radius: 16px;
+    max-width: 100%;
+    padding: 1rem;
   }
 
   .display {
@@ -157,17 +240,61 @@
   }
 
   .display .expression {
-    font-size: 0.875rem;
+    font-size: 0.8rem;
   }
 
   .button {
-    padding: 1rem;
-    font-size: 1.25rem;
-    border-radius: 10px;
+    padding: 0.75rem 0.4rem;
+    font-size: 0.9rem;
+    min-height: 44px;
+  }
+
+  .button.function {
+    font-size: 0.8rem;
   }
 
   .buttonGrid {
-    gap: 0.5rem;
+    gap: 0.4rem;
+    grid-template-columns: repeat(5, 1fr);
   }
 }
 
+@media (max-width: 480px) {
+  .calculator {
+    padding: 0.75rem;
+    border-radius: 16px;
+  }
+
+  .display {
+    min-height: 90px;
+    padding: 0.75rem;
+  }
+
+  .display .result {
+    font-size: 1.75rem;
+  }
+
+  .display .expression {
+    font-size: 0.75rem;
+  }
+
+  .button {
+    padding: 0.65rem 0.3rem;
+    font-size: 0.85rem;
+    min-height: 40px;
+    border-radius: 8px;
+  }
+
+  .button.function {
+    font-size: 0.75rem;
+  }
+
+  .buttonGrid {
+    gap: 0.35rem;
+  }
+
+  .modeButton {
+    font-size: 0.75rem;
+    padding: 0.4rem;
+  }
+}
