@@ -64,6 +64,20 @@ function safeEvaluate(expression: string, angleMode: AngleMode = "deg"): number 
       return null;
     }
 
+    // Check for incomplete function calls (like "sin(" or "sin(30" without closing paren)
+    // Count opening and closing parentheses
+    const openParens = (expression.match(/\(/g) || []).length;
+    const closeParens = (expression.match(/\)/g) || []).length;
+    if (openParens > closeParens) {
+      // Incomplete function call - don't evaluate yet
+      return null;
+    }
+
+    // Check if expression ends with a function name followed by opening paren (incomplete)
+    if (/[a-z]+\s*\($/.test(expression)) {
+      return null;
+    }
+
     // Replace constants first
     let processed = expression
       .replace(/π/g, Math.PI.toString())
@@ -82,34 +96,77 @@ function safeEvaluate(expression: string, angleMode: AngleMode = "deg"): number 
     // Handle 1/x - match pattern like "51/x" or "5.21/x"
     processed = processed.replace(/(\d+(?:\.\d+)?)1\/x/g, "(1/$1)");
 
-    // Replace function names with JavaScript equivalents
-    const functionReplacements: { [key: string]: string } = {
-      sin: angleMode === "deg" ? "Math.sin(Math.PI/180*" : "Math.sin(",
-      cos: angleMode === "deg" ? "Math.cos(Math.PI/180*" : "Math.cos(",
-      tan: angleMode === "deg" ? "Math.tan(Math.PI/180*" : "Math.tan(",
-      asin: angleMode === "deg" ? "180/Math.PI*Math.asin(" : "Math.asin(",
-      acos: angleMode === "deg" ? "180/Math.PI*Math.acos(" : "Math.acos(",
-      atan: angleMode === "deg" ? "180/Math.PI*Math.atan(" : "Math.atan(",
-      sinh: "Math.sinh(",
-      cosh: "Math.cosh(",
-      tanh: "Math.tanh(",
-      log: "Math.log10(",
-      ln: "Math.log(",
-      exp: "Math.exp(",
-      sqrt: "Math.sqrt(",
-      cbrt: "Math.cbrt(",
+    // Helper function to extract and replace function calls with proper argument handling
+    // Handles balanced parentheses for nested function calls
+    const replaceFunctionCall = (expr: string, funcName: string, jsFunc: string, needsDegConversion: boolean): string => {
+      const funcPattern = new RegExp(`\\b${funcName}\\s*\\(`, "g");
+      let result = expr;
+      let match;
+      
+      // Find all function calls and replace them from right to left to preserve indices
+      const matches: Array<{ start: number; end: number; arg: string }> = [];
+      let searchIndex = 0;
+      
+      while ((match = funcPattern.exec(expr)) !== null) {
+        const funcStart = match.index;
+        const parenStart = funcStart + match[0].length;
+        let parenCount = 1;
+        let i = parenStart;
+        
+        // Find the matching closing parenthesis
+        while (i < expr.length && parenCount > 0) {
+          if (expr[i] === '(') parenCount++;
+          else if (expr[i] === ')') parenCount--;
+          i++;
+        }
+        
+        if (parenCount === 0) {
+          const arg = expr.substring(parenStart, i - 1);
+          matches.push({ start: funcStart, end: i, arg });
+        }
+      }
+      
+      // Replace from right to left to preserve indices
+      for (let j = matches.length - 1; j >= 0; j--) {
+        const { start, end, arg } = matches[j];
+        let replacement;
+        if (needsDegConversion && angleMode === "deg") {
+          replacement = `Math.${jsFunc}(Math.PI/180*(${arg}))`;
+        } else {
+          replacement = `Math.${jsFunc}(${arg})`;
+        }
+        result = result.substring(0, start) + replacement + result.substring(end);
+      }
+      
+      return result;
     };
 
-    // Replace functions (handle function calls) - process longer names first
-    const sortedFunctions = Object.keys(functionReplacements).sort((a, b) => b.length - a.length);
-    for (const func of sortedFunctions) {
-      const replacement = functionReplacements[func];
-      const regex = new RegExp(`\\b${func}\\s*\\(`, "g");
-      processed = processed.replace(regex, replacement);
+    // Replace function calls - handle each function type
+    const functionsToReplace = [
+      { name: "asin", js: "asin", deg: true },
+      { name: "acos", js: "acos", deg: true },
+      { name: "atan", js: "atan", deg: true },
+      { name: "sinh", js: "sinh", deg: false },
+      { name: "cosh", js: "cosh", deg: false },
+      { name: "tanh", js: "tanh", deg: false },
+      { name: "sqrt", js: "sqrt", deg: false },
+      { name: "cbrt", js: "cbrt", deg: false },
+      { name: "sin", js: "sin", deg: true },
+      { name: "cos", js: "cos", deg: true },
+      { name: "tan", js: "tan", deg: true },
+      { name: "log", js: "log10", deg: false },
+      { name: "ln", js: "log", deg: false },
+      { name: "exp", js: "exp", deg: false },
+    ];
+
+    // Process longer names first to avoid partial matches
+    functionsToReplace.sort((a, b) => b.name.length - a.name.length);
+    
+    for (const func of functionsToReplace) {
+      processed = replaceFunctionCall(processed, func.name, func.js, func.deg);
     }
 
     // Handle power operator (^) - must be after function replacements
-    // Match numbers or function results
     processed = processed.replace(/(\d+(?:\.\d+)?)\s*\^\s*(\d+(?:\.\d+)?)/g, "Math.pow($1,$2)");
 
     // Check for empty or invalid expressions
@@ -134,7 +191,6 @@ function safeEvaluate(expression: string, angleMode: AngleMode = "deg"): number 
     }
 
     // Use Function constructor to evaluate
-    // The expression should now be valid JavaScript
     const result = Function(`"use strict"; return (${normalized})`)();
     
     if (typeof result !== "number" || !isFinite(result) || isNaN(result)) {
@@ -142,7 +198,9 @@ function safeEvaluate(expression: string, angleMode: AngleMode = "deg"): number 
     }
 
     return result;
-  } catch {
+  } catch (error) {
+    // Log error for debugging (can be removed in production)
+    console.error("Evaluation error:", error, "Expression:", expression);
     return null;
   }
 }
@@ -181,6 +239,30 @@ export default function Calculator() {
       return;
     }
 
+    // Check for incomplete function calls - don't evaluate if parentheses don't match
+    const openParens = (expr.match(/\(/g) || []).length;
+    const closeParens = (expr.match(/\)/g) || []).length;
+    if (openParens > closeParens) {
+      // Incomplete - try to evaluate what we have so far, or show previous result
+      // Try to evaluate the part before the incomplete function call
+      const lastOpenParen = expr.lastIndexOf("(");
+      if (lastOpenParen > 0) {
+        const beforeIncomplete = expr.substring(0, lastOpenParen);
+        if (beforeIncomplete) {
+          const evaluated = safeEvaluate(beforeIncomplete, angleMode);
+          if (evaluated !== null) {
+            setResult(formatNumber(evaluated));
+            setHasError(false);
+            return;
+          }
+        }
+      }
+      // If we can't evaluate, just show 0 or keep previous result
+      setResult("0");
+      setHasError(false);
+      return;
+    }
+
     // If expression ends with an operator, evaluate without it
     if (/[\+\-\*\/]$/.test(expr)) {
       const exprWithoutOperator = expr.slice(0, -1);
@@ -201,8 +283,9 @@ export default function Calculator() {
     }
 
     // If expression ends with a function name (like "sin" without opening paren), don't evaluate
-    if (/[a-z]+$/.test(expr) && !expr.endsWith(")")) {
-      const exprWithoutFunction = expr.replace(/[a-z]+$/, "");
+    if (/[a-z]+\s*$/.test(expr) && !expr.endsWith(")")) {
+      // Remove the trailing function name and evaluate what's before it
+      const exprWithoutFunction = expr.replace(/[a-z]+\s*$/, "");
       if (exprWithoutFunction === "") {
         setResult("0");
         setHasError(false);
